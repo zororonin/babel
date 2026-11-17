@@ -182,9 +182,25 @@ project-babel/
 
 ---
 
+## Git Branching & Contribution Workflow
+
+Project Babel follows a modified **GitFlow** branching model:
+- **`main`**: Production-ready, verified release milestones (protected).
+- **`develop`**: Central integration branch for active sprint development (protected).
+- **`feature/*`**: Feature deliverables and user stories (e.g., `feature/sprint-2-identity-auth`).
+- **`release/*`** & **`hotfix/*`**: Release hardening and critical production hotfixes.
+
+All commits adhere to **Conventional Commits 1.0.0**, and all PRs require green CI checks (linting, typing, 80%+ test coverage).
+
+For complete branching diagrams, commit rules, and cheat sheets, see:
+- [Git Branching Strategy & Workflow Guide](docs/workflows/git-workflow.md)
+
+---
+
 ## Documentation Inventory
 
 Comprehensive documentation is available in the [`docs/`](docs/) directory:
+- [Git Workflow Guide](docs/workflows/git-workflow.md)
 - [Backend Architecture](docs/architecture/backend-architecture.md)
 - [Docker Architecture](docs/architecture/docker-architecture.md)
 - [Database Foundation](docs/database/database-foundation.md)
