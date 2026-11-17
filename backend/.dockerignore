@@ -1,0 +1,46 @@
+# Git & VCS
+.git/
+.gitignore
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+*.egg-info/
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Testing & Coverage
+tests/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Linter & Typecheck caches
+.ruff_cache/
+.mypy_cache/
+
+# IDE & OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

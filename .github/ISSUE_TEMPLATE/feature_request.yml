@@ -1,0 +1,36 @@
+name: Feature Request
+description: Suggest an idea or architectural improvement for Project Babel
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggest a new feature or improvement for Project Babel.
+  - type: input
+    id: feature-title
+    attributes:
+      label: Feature Title
+      description: Concise summary of the requested feature.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this solve? What user story or use case does it address?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution / Architecture
+      description: Describe the technical implementation, architectural layers affected, and potential tradeoffs.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or features you've considered.
+    validations:
+      required: false

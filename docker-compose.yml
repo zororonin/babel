@@ -1,0 +1,73 @@
+# ==============================================================================
+# Project Babel — Local Development Docker Compose Configuration
+# Services:
+#   1. postgres: PostgreSQL 18 database with persistent storage and healthcheck
+#   2. backend: FastAPI application running with Uvicorn on non-root container
+# ==============================================================================
+
+name: project-babel
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: babel-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-babel_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_dev_root_password}
+      APP_DB_USER: ${APP_DB_USER:-babel_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-babel_dev_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./infrastructure/docker/postgres/init-app-db.sh:/docker-entrypoint-initdb.d/init-app-db.sh:ro
+    ports:
+      # Expose on port 5433 by default on host to avoid collision with native Windows PostgreSQL
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    networks:
+      - babel-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-babel_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: babel-backend
+    restart: unless-stopped
+    environment:
+      APP_NAME: ${APP_NAME:-Project Babel}
+      APP_ENV: ${APP_ENV:-development}
+      APP_VERSION: ${APP_VERSION:-0.1.0}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8000
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://babel_app:babel_dev_password@postgres:5432/babel_db}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - babel-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  babel-network:
+    name: babel-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: babel_postgres_data

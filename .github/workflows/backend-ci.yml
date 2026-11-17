@@ -1,0 +1,129 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "backend/**"
+      - "infrastructure/**"
+      - ".github/workflows/backend-ci.yml"
+      - "docker-compose.yml"
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - "backend/**"
+      - "infrastructure/**"
+      - ".github/workflows/backend-ci.yml"
+      - "docker-compose.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-format:
+    name: Lint & Format Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Ruff
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Run Ruff Lint Check
+        run: ruff check backend/
+
+      - name: Run Ruff Format Verification
+        run: ruff format --check backend/
+
+  typecheck:
+    name: Static Type Checking
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./backend[dev]"
+
+      - name: Run Mypy
+        run: mypy backend/app
+
+  test-and-coverage:
+    name: Automated Tests & Coverage
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: babel_test_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres_dev_root_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "./backend[dev]"
+
+      - name: Run Pytest with Coverage
+        env:
+          DATABASE_URL: postgresql+psycopg://postgres:postgres_dev_root_password@localhost:5432/babel_test_db
+          APP_ENV: testing
+        run: |
+          cd backend
+          pytest tests/ -v --cov=app --cov-report=term-missing --cov-report=xml
+
+  docker-build:
+    name: Docker Image Build Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: project-babel-backend:ci-test
